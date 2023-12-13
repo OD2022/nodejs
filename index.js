@@ -344,7 +344,7 @@ app.get('/customfabrics/rows/:offset', async (req, res) => {
 //User views a single product
 app.get('/product/:id', (req, res) => {
     const productId = req.params.id;
-    const sql = 'SELECT * FROM Product WHERE product_id = ?';
+    const sql = 'SELECT * FROM Product WHERE product_id = $1';
     connection.query(sql, [productId], (err, result) => {
         if (err) {
             console.error('Error executing SQL query:', err);
@@ -363,7 +363,7 @@ app.get('/product/:id', (req, res) => {
 app.get('/stoles/:id', (req, res) => {
     const stoleId = req.params.id;
     // SQL query to fetch a student by ID
-    const sql = 'SELECT * FROM StoleProduct WHERE stole_product_id = ?';
+    const sql = 'SELECT * FROM StoleProduct WHERE stole_product_id = $1';
 
     connection.query(sql, [stoleId], (err, result) => {
         if (err) {
@@ -383,7 +383,7 @@ app.get('/stoles/:id', (req, res) => {
 //Fetch the fabric
 app.get('/customfabric/:id', (req, res) => {
     const customFabricId = req.params.id;
-    const sql = 'SELECT * FROM CustomFabricProduct WHERE custom_fabric_product_id = ?';
+    const sql = 'SELECT * FROM CustomFabricProduct WHERE custom_fabric_product_id = $1';
 
     connection.query(sql, [customFabricId], (err, result) => {
         if (err) {
