@@ -1,7 +1,6 @@
 const express = require("express");
 const app = express();
 const port = process.env.PORT || 3000;
-
 const { Pool } = require('pg');
 const cors = require('cors');
 
@@ -223,7 +222,7 @@ app.get('/customfabrics', async (req, res) => {
         if (error) {
           throw error
         }
-        res.status(201).json(results);
+        res.status(201).json(results.rows);
       })
     });
 
@@ -235,7 +234,7 @@ app.get('/product/:id', (req, res) => {
         if (error) {
           throw error
         }
-        res.status(201).json(results);
+        res.status(201).json(results.rows);
       });
     });
 
@@ -258,7 +257,7 @@ app.get('/sellers/products/:email', async (req, res) => {
         if (error) {
             throw error;
         }
-        res.status(200).json(results); 
+        res.status(200).json(results.rows); 
     });
 });
 
@@ -284,7 +283,6 @@ app.post('/admin/customfabric', async (req, res) => {
       })
     });
   
-
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
