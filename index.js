@@ -193,6 +193,20 @@ app.get('/customer/customfabric-order/:offset', async (req, res) => {
     }
 });
 
+//Getting all custom fabric order details
+app.get('/customfabric-order', async (req, res) => {
+    try {
+        const customer_email = req.body;
+        const sql = 'SELECT Orders.*, CustomFabricOrderDetails.* FROM Orders JOIN CustomFabricOrderDetails ON Orders.payment_id = CustomFabricOrderDetails.payment_id WHERE Orders.customer_email = $1 ORDER BY Orders.date_created';
+        const result = await connection.query(sql, [customer_email]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({error: 'Internal Server Error'});
+    }
+});
+
+
 //Placing an order for a product
 app.post('/customer/order', async (req, res) => {
     try {
