@@ -197,7 +197,7 @@ app.get('/customer/customfabric-order/:offset', async (req, res) => {
 app.get('/customfabric-order', async (req, res) => {
     try {
         const customer_email = req.body;
-        const sql = 'SELECT Orders.*, CustomFabricOrderDetails.* FROM Orders JOIN CustomFabricOrderDetails ON Orders.payment_id = CustomFabricOrderDetails.payment_id WHERE Orders.customer_email = $1 ORDER BY Orders.date_created';
+        const sql = 'SELECT * FROM CustomFabricOrderDetails';
         const result = await connection.query(sql, [customer_email]);
         res.json(result.rows);
     } catch (error) {
