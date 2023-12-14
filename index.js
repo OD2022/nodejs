@@ -42,7 +42,7 @@ app.post("/sign-in", (req, res) => {
 	const {email, user_password, user_role} = req.body;
 	const query = `SELECT *
                    FROM WovenUsers
-                   WHERE email = $1,
+                   WHERE email = $1
                      AND user_password = $2 AND user_role = $3`;
 	connection.query(query, [email, user_password, user_role], (err, results) => {
 		if (err) {
