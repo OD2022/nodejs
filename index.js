@@ -73,7 +73,7 @@ app.post('/registerAdmin', (req, res) => {
         DOB,
         sex
     } = req.body;
-    const userInsertQuery = 'INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES (?,?,?,?,?,?)';
+    const userInsertQuery = 'INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES ($1,$2,$3,$4,$5,$6)';
     const userInsertParams = [email, first_name, last_name, country, user_password, 'admin'];
     connection.query(userInsertQuery, userInsertParams, (err, userResults) => {
         if (err) {
@@ -81,7 +81,7 @@ app.post('/registerAdmin', (req, res) => {
                 res.status(500).json({error: 'Error inserting into user table'});
             });
         }
-        const adminInsertQuery = 'INSERT INTO WovenAdmin(email, admin_tel_no, address, dob, sex) VALUES (?,?,?,?,?)';
+        const adminInsertQuery = 'INSERT INTO WovenAdmin(email, admin_tel_no, address, dob, sex) VALUES ($1,$2,$3,$4,$5)';
         const adminInsertParams = [email, admin_tel_no, address, DOB, sex];
         connection.query(adminInsertQuery, adminInsertParams, (err) => {
             if (err) {
@@ -143,7 +143,6 @@ async function insertSeller(email, ghana_region, seller_tel_no, momo_number, add
     return new Promise((resolve, reject) => {
         const sellerInsertQuery = 'INSERT INTO Seller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex) VALUES ($1,$2,$3,$4,$5,$6,$7)';
         const sellerInsertParams = [email, ghana_region, seller_tel_no, momo_number, address, dob, sex];
-
         connection.query(sellerInsertQuery, sellerInsertParams, (err) => {
             if (err) {
                 reject(err);
@@ -163,7 +162,7 @@ app.post('/registerCustomer', (req, res) => {
         country,
         user_password
     } = req.body;
-    const userInsertQuery = 'INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES (?,?,?,?,?,?)';
+    const userInsertQuery = 'INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES ($1,$2,$3,$4,$5,$6)';
     const userInsertParams = [email, first_name, last_name, country, user_password, 'customer'];
     connection.query(userInsertQuery, userInsertParams, (err, userResults) => {
         if (err) {
@@ -171,8 +170,8 @@ app.post('/registerCustomer', (req, res) => {
                 res.status(500).json({error: 'Error inserting into user table'});
             });
         }
-        const customerInsertQuery = 'INSERT INTO Customer(email) VALUES (?)';
-        const customerInsertParams = [email, ghana_region];
+        const customerInsertQuery = 'INSERT INTO Customer(email) VALUES ($1)';
+        const customerInsertParams = [email];
 
         connection.query(customerInsertQuery, customerInsertParams, (err) => {
             if (err) {
