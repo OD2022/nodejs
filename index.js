@@ -52,7 +52,7 @@ app.post("/sign-in", (req, res) => {
 			if (results.length > 0) {
 				res.send(results);
 			} else {
-				res.send(false);
+				res.send(results);
 				console.log("Invalid Username or password");
 			}
 		}
