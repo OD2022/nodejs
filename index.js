@@ -48,7 +48,7 @@ app.post("/sign-in", async (req, res) => {
       `;
       const { rows } = await connection.query(query, [email, user_password, user_role]);
       if (rows.length > 0) {
-        res.send(rows);
+        res.send(true);
       } else {
         console.log("Invalid Username or password");
         res.status(401).send("Invalid Username or Password");
