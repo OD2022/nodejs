@@ -3,7 +3,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const { Pool } = require('pg');
-//const cors = require('cors');
+const cors = require('cors');
 
 app.use(express.json());
 //app.use(cors());
@@ -38,266 +38,184 @@ app.get('/', async (req, res) => {
 });
 
 
-app.post('/sign-in', async (req, res) => {
-    try {
-      const {email, user_password, user_role } = req.body;
-      const query = `SELECT *
-      FROM WovenUsers
-      WHERE email = $1
-        AND (user_password = $2 AND user_role = $3);
-      `;
-      const { rows } = await connection.query(query, [email, user_password, user_role]);
-      if (rows.length > 0) {
-        res.send(true);
-      } else {
-        console.log("Invalid Username or password");
-        res.status(401).send("Invalid Username or Password");
+app.post('/sign-in/:role', async (req, res) => {
+    const { email, user_password } = req.body;
+    const user_role = req.params['role'];
+    connection.query(
+      'SELECT * FROM WovenUsers WHERE email = $1 AND (user_password = $2 AND user_role = $3)',
+      [email, user_password, user_role],
+      (error, results) => {
+        if (error) {
+          throw error;
+        }
+        const rowCount = results.rowCount;
+        if (rowCount > 0) {
+          res.status(201).send(`User successfully signed in. ${rowCount} rows returned.`);
+        } else {
+          res.status(401).send('Invalid email or password.');
+        }
       }
-    } catch (err) {
-      console.error("Error executing query:", err);
-      res.status(500).send("Internal Server Error");
-    }
+    );
   });
 
+  //Registering user
+  app.post('/registerUser/:role', (req, res) => {
+        const {
+            email,
+            first_name,
+            last_name,
+            country,
+            user_password
+        } = req.body;
+        const role = req.params['role'];
+        connection.query('INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES ($1,$2,$3,$4,$5,$6)', [email, first_name, last_name, country, user_password, role], (error, results) => {
+            if (error) {
+              throw error
+            }
+            res.status(201).send('User succesfuly added');
+          })
+        });
 
 
-app.post('/registerAdmin', (req, res) => {
-    const {
-        email,
-        first_name,
-        last_name,
-        country,
-        user_password,
-        admin_tel_no,
-        address,
-        DOB,
-        sex
-    } = req.body;
-    const userInsertQuery = 'INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES ($1,$2,$3,$4,$5,$6)';
-    const userInsertParams = [email, first_name, last_name, country, user_password, 'admin'];
-    connection.query(userInsertQuery, userInsertParams, (err, userResults) => {
-        if (err) {
-            return connection.rollback(() => {
-                res.status(500).json({error: 'Error inserting into user table'});
+        app.post('/registerAdmin', (req, res) => {
+            const {
+                email,
+                admin_tel_no,
+                address,
+                DOB,
+                sex
+            } = req.body;
+            connection.query('INSERT INTO WovenAdmin(email, admin_tel_no, address, dob, sex) VALUES ($1,$2,$3,$4,$5)',[email, admin_tel_no, address, DOB, sex], (error, results) => {
+                if (error) {
+                  throw error
+                }
+                res.status(201).send('Admin succesfuly added');
+              })
             });
-        }
-        const adminInsertQuery = 'INSERT INTO WovenAdmin(email, admin_tel_no, address, dob, sex) VALUES ($1,$2,$3,$4,$5)';
-        const adminInsertParams = [email, admin_tel_no, address, DOB, sex];
-        connection.query(adminInsertQuery, adminInsertParams, (err) => {
-            if (err) {
-                return connection.rollback(() => {
-                    res.status(500).json({error: 'Error inserting into admin table'});
+
+            app.post('/registerSeller', (req, res) => {
+                const {
+                    email,
+                    ghana_region,
+                    seller_tel_no,
+                    momo_number,
+                    address,
+                    dob,
+                    sex
+                } = req.body;
+                connection.query('INSERT INTO Seller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex) VALUES ($1,$2,$3,$4,$5,$6,$7)',[email, ghana_region, seller_tel_no, momo_number, address, dob, sex]
+                , (error, results) => {
+                    if (error) {
+                      throw error
+                    }
+                    res.status(201).send('Seller succesfuly added');
+                  })
                 });
-            } else {
-                res.status(201).send('admin registered successfully');
-            }
-        });
-    });    
-});
 
-
-//Registering a seller
-app.post('/registerSeller', async (req, res) => {
-    const {
-        email,
-        first_name,
-        last_name,
-        country,
-        user_password,
-        ghana_region,
-        seller_tel_no,
-        momo_number,
-        address,
-        dob,
-        sex
-    } = req.body;
-
-    try {
-        // Insert into WovenUsers table
-        await insertUser(email, first_name, last_name, country, user_password);
-        // Insert into Seller table
-        await insertSeller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex);
-
-        res.status(201).send('Seller registered successfully');
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error registering seller' });
-    }
-});
-
-async function insertUser(email, first_name, last_name, country, user_password) {
-    return new Promise((resolve, reject) => {
-        const userInsertQuery = 'INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES ($1,$2,$3,$4,$5,$6)';
-        const userInsertParams = [email, first_name, last_name, country, user_password, 'seller'];
-        connection.query(userInsertQuery, userInsertParams, (err, userResults) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(userResults);
-            }
-        });
-    });
-}
-
-async function insertSeller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex) {
-    return new Promise((resolve, reject) => {
-        const sellerInsertQuery = 'INSERT INTO Seller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex) VALUES ($1,$2,$3,$4,$5,$6,$7)';
-        const sellerInsertParams = [email, ghana_region, seller_tel_no, momo_number, address, dob, sex];
-        connection.query(sellerInsertQuery, sellerInsertParams, (err) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
-}
-app.post('/registerCustomer', (req, res) => {
-    const {
-        email,
-        first_name,
-        last_name,
-        country,
-        user_password
-    } = req.body;
-    const userInsertQuery = 'INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES ($1,$2,$3,$4,$5,$6)';
-    const userInsertParams = [email, first_name, last_name, country, user_password, 'customer'];
-    connection.query(userInsertQuery, userInsertParams, (err, userResults) => {
-        if (err) {
-            return connection.rollback(() => {
-                res.status(500).json({error: 'Error inserting into user table'});
-            });
-        }
-        const customerInsertQuery = 'INSERT INTO Customer(email) VALUES ($1)';
-        const customerInsertParams = [email];
-
-        connection.query(customerInsertQuery, customerInsertParams, (err) => {
-            if (err) {
-                return connection.rollback(() => {
-                    res.status(500).json({error: 'Error inserting into customer table'});
-                });
-            } else {
-                res.status(201).send('customer registered successfully');
-            }
-        });
-    });    
-});
+                app.post('/registerCustomer', (req, res) => {
+                    const {
+                        email
+                    } = req.body;
+                    connection.query('INSERT INTO Seller(email) VALUES ($1)',[email]
+                    , (error, results) => {
+                        if (error) {
+                          throw error
+                        }
+                        res.status(201).send('Customer succesfuly added');
+                      })
+                    });
 
 
 //Creating a cart
 app.post('/create-cart', async (req, res) => {
-    try {
         const {customer_email} = req.body;
-        const sql = 'INSERT INTO Cart(cart_id) VALUES(?)';
-        const result = await connection.query(sql, [customer_email]);
-        res.json(result.rows);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({error: 'Internal Server Error'});
-    }
-});
+        connection.query('INSERT INTO Cart(cart_id) VALUES($1)', [customer_email], (error,results) => 
+        {
+            if (error) {
+              throw error
+            }
+            res.status(201).send('Cart succesfuly created');
+          })
+        });
+
 
 //Adding a product to cart
 app.post('/add-to-cart', async (req, res) => {
-    try {
         const {cart_id, product_id, quantity} = req.body;
-        const sql = 'INSERT INTO CartProduct(cart_id, product_id, quantity) VALUES(?,?,?)';
-        const result = await connection.query(sql, [cart_id, product_id, quantity]);
-        res.json(result.rows);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({error: 'Internal Server Error'});
-    }
-});
-
+        connection.query('INSERT INTO CartProduct(cart_id, product_id, quantity) VALUES($1,$2,$3)', [cart_id, product_id, quantity], (error,results) => 
+        {
+            if (error) {
+              throw error
+            }
+            res.status(201).send('Add to cart succesfuly added');
+          })
+        });
+    
 
 //RemoveItemFrom Cart
 app.post('/remove-from-cart', async (req, res) => {
-    try {
         const { product_id } = req.body;
         if (!product_id) {
             throw new Error('Product ID is missing in the request body.');
         }
-
-        const sql = 'DELETE FROM CartProduct WHERE product_id=$1';
-        const result = await connection.query(sql, [product_id]);
-
-        if (result.rows.length === 0) {
-            res.status(404).json({ error: 'Product not found in the cart.' });
-        } else {
-            res.json({ success: true, message: 'Product successfully removed from the cart.' });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+        connection.query('DELETE FROM CartProduct WHERE product_id=$1', [product_id], (error,results) => 
+        {
+            if (error) {
+              throw error
+            }
+            res.status(201).send('Product removed from cart');
+          })
+        });
 
 
 //Clearing out a cart
 app.post('/clear-cart', async (req, res) => {
-    try {
         const { cart_id } = req.body;
         if (!cart_id) {
             throw new Error('Product ID is missing in the request body.');
         }
-        const sql = 'DELETE FROM CartProduct WHERE cart_id=$1';
-        const result = await connection.query(sql, [cart_id]);
-        if (result.rows.length === 0) {
-            res.status(404).json({ error: 'Product not found in the cart.' });
-        } else {
-            res.json({ success: true, message: 'Product successfully removed from the cart.' });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-
-app.post('/checkout/cart-id', async (req, res) => {
+        connection.query('DELETE FROM CartProduct WHERE cart_id=$1', [cart_id], (error,results) => 
+        {
+            if (error) {
+              throw error
+            }
+            res.status(201).send('Cart succesfully emptied');
+          })
+        });
+        
+//Checkout the cart
+app.post('/checkout/:cart-id', async (req, res) => {
     let cartTotal = 0;
-    //Retrive users payment info
     const cartId = req.params['cart-id'];
     const resultMap = {};
-    const sql = `
-        SELECT Product.product_id, Product.price * CartProduct.quantity AS TotalPrice, Seller.momo_number AS SellerMomo
-        FROM CartProduct
-                 JOIN Product ON CartProduct.product_id = Product.product_id
-                 JOIN Seller ON Product.seller_id = Seller.seller_id
-        WHERE CartProduct.cart_id = ?
-    `;
-    connection.query(sql, [cartId], (error, results, fields) => {
-        if (error) {
-            console.error('Error executing the query: ' + error.stack);
-            res.status(500).send('Internal Server Error');
-            return;
-        }
-        // Iterate through the query results and populate the map
-        results.forEach((row) => {
-            const productId = row.product_id;
-            const totalPrice = row.TotalPrice;
-            const sellerMomo = row.SellerMomo;
-
-            // Initialize the inner dictionary if the product ID is not in the resultMap
-            if (!resultMap.hasOwnProperty(productId)) {
-                resultMap[productId] = {};
+    connection.query('SELECT Product.product_id, Product.price * CartProduct.quantity AS TotalPrice, Seller.momo_number AS SellerMomo FROM CartProduct JOIN Product ON CartProduct.product_id = Product.product_id JOIN Seller ON Product.seller_id = Seller.seller_id WHERE CartProduct.cart_id = $1', [cartId], (error,results) => 
+        {
+            if (error) {
+              throw error
             }
-            // Populating the inner dictionary with seller momo number and totalPrice
-            resultMap[productId][sellerMomo] = totalPrice;
-        });
-        Object.values(resultMap).forEach((product) => {
-            Object.values(product).forEach((totalPrice) => {
-                cartTotal += totalPrice;
+            results.forEach((row) => {
+                const productId = row.product_id;
+                const totalPrice = row.TotalPrice;
+                const sellerMomo = row.SellerMomo;
+    
+                // Initialize the inner dictionary if the product ID is not in the resultMap
+                if (!resultMap.hasOwnProperty(productId)) {
+                    resultMap[productId] = {};
+                }
+                // Populating the inner dictionary with seller momo number and totalPrice
+                resultMap[productId][sellerMomo] = totalPrice;
             });
+            Object.values(resultMap).forEach((product) => {
+                Object.values(product).forEach((totalPrice) => {
+                    cartTotal += totalPrice;
+                });
+            });
+            // Respond with the map
+            res.json({resultMap, cartTotal});
+          })
         });
-        // Respond with the map
-        res.json({resultMap, cartTotal});
 
 
-        //Call Order API route once payment to woven Africa is complete
-    });
-});
 
 app.get('/customer/merchant-order/:offset', async (req, res) => {
     try {
@@ -397,7 +315,7 @@ app.post('customer/merchant-order', async (req, res) => {
             tracking_id,
             order_status
         } = req.body;
-        const sql = 'INSERT INTO MerchantProductOrder(payment_id,product_id, product_total,quantity, seller_fulfilled, delivery_status, tracking_id, order_status) VALUES(?,?,?,?,?,?,?,?)';
+        const sql = 'INSERT INTO MerchantProductOrder(payment_id,product_id, product_total,quantity, seller_fulfilled, delivery_status, tracking_id, order_status) VALUES($1,$2,$3,$4,$5,$6,$7,$8)';
         const result = await connection.query(sql, [payment_id,product_id, product_total,quantity, seller_fulfilled, delivery_status, tracking_id, order_status]);
         res.json(result.rows);
     } catch (error) {
