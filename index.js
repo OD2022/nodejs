@@ -98,7 +98,6 @@ app.post('/registerAdmin', (req, res) => {
 
 //Registering a seller
 app.post('/registerSeller', (req, res) => {
-    const connection = req.db;
     const {
         email,
         first_name,
@@ -141,7 +140,6 @@ app.post('/registerSeller', (req, res) => {
 });
 
 app.post('/registerCustomer', (req, res) => {
-    const connection = req.db;
     const {
         email,
         first_name,
