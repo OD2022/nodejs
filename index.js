@@ -40,16 +40,13 @@ app.get('/', async (req, res) => {
 
 app.post("/sign-in", async (req, res) => {
     try {
-      const { email, user_password, user_role } = req.body;
-      const query = `
-        SELECT *
-        FROM WovenUsers
-        WHERE email = $1
-          AND user_password = $2
-          AND user_role = $3`;
-  
+      const {email, user_password, user_role } = req.body;
+      const query = `SELECT *
+      FROM WovenUsers
+      WHERE email = $1
+        AND (user_password = $2 AND user_role = $3);
+      `;
       const { rows } = await connection.query(query, [email, user_password, user_role]);
-  
       if (rows.length > 0) {
         res.send(rows);
       } else {
