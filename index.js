@@ -39,13 +39,12 @@ app.get('/', async (req, res) => {
 
 
 app.post("/sign-in", (req, res) => {
-	const {email, user_password} = req.body;
-	const user_type = req.params.role;
+	const {email, user_password, user_role} = req.body;
 	const query = `SELECT *
                    FROM WovenUsers
                    WHERE email = $1,
                      AND user_password = $2 AND user_type = $3`;
-	connection.query(query, [email, user_password, user_type], (err, results) => {
+	connection.query(query, [email, user_password, user_role], (err, results) => {
 		if (err) {
 			console.error("Error executing query:", err);
 			res.status(500).send("Internal Server Error");
