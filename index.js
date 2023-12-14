@@ -62,7 +62,6 @@ app.post('/sign-in', async (req, res) => {
 
 
 app.post('/registerAdmin', (req, res) => {
-    const connection = req.db;
     const {
         email,
         first_name,
@@ -96,8 +95,9 @@ app.post('/registerAdmin', (req, res) => {
     });    
 });
 
+
 //Registering a seller
-app.post('/registerSeller', (req, res) => {
+app.post('/registerSeller', async (req, res) => {
     const {
         email,
         first_name,
@@ -111,33 +111,51 @@ app.post('/registerSeller', (req, res) => {
         dob,
         sex
     } = req.body;
-    const userInsertQuery = 'INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES (?,?,?,?,?,?)';
-    const userInsertParams = [email, first_name, last_name, country, user_password, 'seller'];
-    connection.query(userInsertQuery, userInsertParams, (err, userResults) => {
-        if (err) {
-            return connection.rollback(() => {
-                res.status(500).json({error: 'Error inserting into user table'});
-            });
-        }
+
+    try {
+        // Insert into WovenUsers table
+        await insertUser(email, first_name, last_name, country, user_password);
+
+        // Insert into Seller table
+        await insertSeller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex);
+
+        res.status(201).send('Seller registered successfully');
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error registering seller' });
+    }
+});
+
+async function insertUser(email, first_name, last_name, country, user_password) {
+    return new Promise((resolve, reject) => {
+        const userInsertQuery = 'INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES (?,?,?,?,?,?)';
+        const userInsertParams = [email, first_name, last_name, country, user_password, 'seller'];
+
+        connection.query(userInsertQuery, userInsertParams, (err, userResults) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(userResults);
+            }
+        });
+    });
+}
+
+async function insertSeller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex) {
+    return new Promise((resolve, reject) => {
         const sellerInsertQuery = 'INSERT INTO Seller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex) VALUES (?,?,?,?,?,?,?)';
-        const sellerInsertParams = [email, ghana_region,
-            seller_tel_no,
-            momo_number,
-            address,
-            dob,
-            sex];
+        const sellerInsertParams = [email, ghana_region, seller_tel_no, momo_number, address, dob, sex];
 
         connection.query(sellerInsertQuery, sellerInsertParams, (err) => {
             if (err) {
-                return connection.rollback(() => {
-                    res.status(500).json({error: 'Error inserting into seller table'});
-                });
+                reject(err);
             } else {
-                res.status(201).send('seller registered successfully');
+                resolve();
             }
         });
-    });    
-});
+    });
+}
+
 
 app.post('/registerCustomer', (req, res) => {
     const {
