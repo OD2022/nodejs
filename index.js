@@ -193,11 +193,13 @@ app.get('/customer/customfabric-order/:offset', async (req, res) => {
     }
 });
 
-//Getting all custom fabric order details
+
+//Getting all custom fabric order details by email
 app.get('/customfabric-order', async (req, res) => {
     try {
-        const sql = 'SELECT * FROM CustomFabricOrderDetails';
-        const result = await connection.query(sql);
+        const customer_email = req.body;
+        const sql = 'SELECT Orders.*, CustomFabricOrderDetails.* FROM Orders JOIN CustomFabricOrderDetails ON Orders.payment_id = CustomFabricOrderDetails.payment_id  WHERE Orders.customer_email = $1';
+        const result = await connection.query(sql, [customer_email]);
         res.json(result.rows);
     } catch (error) {
         console.error(error);
