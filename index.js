@@ -115,7 +115,6 @@ app.post('/registerSeller', async (req, res) => {
     try {
         // Insert into WovenUsers table
         await insertUser(email, first_name, last_name, country, user_password);
-
         // Insert into Seller table
         await insertSeller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex);
 
@@ -128,9 +127,8 @@ app.post('/registerSeller', async (req, res) => {
 
 async function insertUser(email, first_name, last_name, country, user_password) {
     return new Promise((resolve, reject) => {
-        const userInsertQuery = 'INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES (?,?,?,?,?,?)';
+        const userInsertQuery = 'INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES ($1,$2,$3,$4,$5,$6)';
         const userInsertParams = [email, first_name, last_name, country, user_password, 'seller'];
-
         connection.query(userInsertQuery, userInsertParams, (err, userResults) => {
             if (err) {
                 reject(err);
@@ -143,7 +141,7 @@ async function insertUser(email, first_name, last_name, country, user_password) 
 
 async function insertSeller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex) {
     return new Promise((resolve, reject) => {
-        const sellerInsertQuery = 'INSERT INTO Seller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex) VALUES (?,?,?,?,?,?,?)';
+        const sellerInsertQuery = 'INSERT INTO Seller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex) VALUES ($1,$2,$3,$4,$5,$6,$7)';
         const sellerInsertParams = [email, ghana_region, seller_tel_no, momo_number, address, dob, sex];
 
         connection.query(sellerInsertQuery, sellerInsertParams, (err) => {
