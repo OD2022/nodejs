@@ -38,26 +38,29 @@ app.get('/', async (req, res) => {
 });
 
 
-app.post("/sign-in", (req, res) => {
-	const {email, user_password, user_role} = req.body;
-	const query = `SELECT *
-                   FROM WovenUsers
-                   WHERE email = $1
-                     AND user_password = $2 AND user_role = $3`;
-	connection.query(query, [email, user_password, user_role], (err, results) => {
-		if (err) {
-			console.error("Error executing query:", err);
-			res.status(500).send("Internal Server Error");
-		} else {
-			if (results.length > 0) {
-				res.send(results);
-			} else {
-				res.send(results);
-				console.log("Invalid Username or password");
-			}
-		}
-	});
-});
+app.post("/sign-in", async (req, res) => {
+    try {
+      const { email, user_password, user_role } = req.body;
+      const query = `
+        SELECT *
+        FROM WovenUsers
+        WHERE email = $1
+          AND user_password = $2
+          AND user_role = $3`;
+  
+      const { rows } = await connection.query(query, [email, user_password, user_role]);
+  
+      if (rows.length > 0) {
+        res.send(rows);
+      } else {
+        console.log("Invalid Username or password");
+        res.status(401).send("Invalid Username or Password");
+      }
+    } catch (err) {
+      console.error("Error executing query:", err);
+      res.status(500).send("Internal Server Error");
+    }
+  });
 
 
 app.post('/create-cart', async (req, res) => {
