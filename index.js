@@ -4,9 +4,8 @@ const port = process.env.PORT || 3000;
 
 const { Pool } = require('pg');
 const cors = require('cors');
-
 app.use(express.json());
-//app.use(cors());
+app.use(cors());
 
 const connection = new Pool({
     host: 'berry.db.elephantsql.com',
