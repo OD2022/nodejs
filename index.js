@@ -37,6 +37,30 @@ app.get('/', async (req, res) => {
     }
 });
 
+
+app.post("/sign-in", (req, res) => {
+	const {email, user_password} = req.body;
+	const user_type = req.params.role;
+	const query = `SELECT *
+                   FROM WovenUsers
+                   WHERE email = $1,
+                     AND user_password = $2 AND user_type = $3`;
+	connection.query(query, [email, user_password, user_type], (err, results) => {
+		if (err) {
+			console.error("Error executing query:", err);
+			res.status(500).send("Internal Server Error");
+		} else {
+			if (results.length > 0) {
+				res.send(true);
+			} else {
+				res.send(false);
+				console.log("Invalid Username or password");
+			}
+		}
+	});
+});
+
+
 app.post('/create-cart', async (req, res) => {
     try {
         const {customer_email} = req.body;
