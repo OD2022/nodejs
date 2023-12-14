@@ -50,7 +50,7 @@ app.post("/sign-in", (req, res) => {
 			res.status(500).send("Internal Server Error");
 		} else {
 			if (results.length > 0) {
-				res.send(true);
+				res.send(results);
 			} else {
 				res.send(false);
 				console.log("Invalid Username or password");
