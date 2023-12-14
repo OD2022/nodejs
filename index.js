@@ -152,8 +152,6 @@ async function insertSeller(email, ghana_region, seller_tel_no, momo_number, add
         });
     });
 }
-
-
 app.post('/registerCustomer', (req, res) => {
     const {
         email,
