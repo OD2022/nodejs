@@ -49,9 +49,9 @@ app.post('/sign-in/:role', async (req, res) => {
         }
         const rowCount = results.rowCount;
         if (rowCount > 0) {
-          res.status(201).send(`User successfully signed in. ${rowCount} rows returned.`);
+          res.status(201).send(true);
         } else {
-          res.status(401).send('Invalid email or password.');
+          res.status(401).send(false);
         }
       }
     );
@@ -479,6 +479,7 @@ app.get('/customfabric/:id', (req, res) => {
     });
 });
 
+
 //View Seller by product
 app.get('/seller/:id/products/:offset', async (req, res) => {
     try {
@@ -571,32 +572,21 @@ app.get('/sellers/products/:offset', async (req, res) => {
 
 //Adding a new merchant product
 app.post('/sellers/products/', async (req, res) => {
-    try {
+        
         const {seller_email, product_name, yards, description, price, image_link} = req.body;
-        const currentDatetime = new Date().toISOString();
         const sql = 'INSERT INTO Product(seller_email, product_name, yards, description, price, image_link) VALUES(?,?,?,?,?,?)';
         const result = await connection.query(sql, [seller_email, product_name, yards, description, price, image_link]);
         res.json(result.rows);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({error: 'Internal Server Error'});
-    }
+    
 });
 
 
 
-//Adding a new stole
-app.post('/admin/stole/', async (req, res) => {
-  try {
-      const {admin_email, image_link, price} = req.body;
-      const sql = 'INSERT INTO StoleProduct(admin_email, image_link, price) VALUES(?,?,?)';
-      const result = await connection.query(sql, [admin_email, image_link, price]);
-      res.json(result.rows);
-  } catch (error) {
-      console.error(error);
-      res.status(500).json({error: 'Internal Server Error'});
-  }
-});
+
+
+
+
+
 
 //Adding a new custom fabric
 app.post('/admin/customfabric', async (req, res) => {
