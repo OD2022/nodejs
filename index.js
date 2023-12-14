@@ -196,9 +196,8 @@ app.get('/customer/customfabric-order/:offset', async (req, res) => {
 //Getting all custom fabric order details
 app.get('/customfabric-order', async (req, res) => {
     try {
-        const customer_email = req.body;
         const sql = 'SELECT * FROM CustomFabricOrderDetails';
-        const result = await connection.query(sql, [customer_email]);
+        const result = await connection.query(sql);
         res.json(result.rows);
     } catch (error) {
         console.error(error);
