@@ -60,6 +60,8 @@ app.post("/sign-in", async (req, res) => {
   });
 
 
+
+//Creating a cart
 app.post('/create-cart', async (req, res) => {
     try {
         const {customer_email} = req.body;
