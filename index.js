@@ -26,7 +26,7 @@ connection.connect((err) => {
 app.get('/', async (req, res) => {
     try {
       const client = await connection.connect();
-      const result = await client.query('SELECT * FROM Product');
+      const result = await client.query('SELECT * FROM Product LIMIT 10');
       const products = result.rows;
       client.release();
       res.json(products);
