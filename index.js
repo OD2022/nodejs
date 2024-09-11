@@ -8,11 +8,11 @@ app.use(express.json());
 app.use(cors());
 
 const connection = new Pool({
-    host: 'berry.db.elephantsql.com',
-    user: 'ybaxjnhl',
-    password: 'DSoLBzCxz7-Deirvd5pvIAdcklF_ftEi',
-    database: 'ybaxjnhl',
-    port: 5432, // Your MySQL server port (default is 3306)
+    host: '',
+    user: '',
+    password: '',
+    database: '',
+    port: 5432, 
 });
 connection.connect((err) => {
     if (err) {
@@ -198,10 +198,11 @@ app.post('/checkout/:cart-id', async (req, res) => {
                 const totalPrice = row.TotalPrice;
                 const sellerMomo = row.SellerMomo;
     
-                // Initialize the inner dictionary if the product ID is not in the resultMap
+     
                 if (!resultMap.hasOwnProperty(productId)) {
                     resultMap[productId] = {};
                 }
+                
                 // Populating the inner dictionary with seller momo number and totalPrice
                 resultMap[productId][sellerMomo] = totalPrice;
             });
@@ -210,7 +211,6 @@ app.post('/checkout/:cart-id', async (req, res) => {
                     cartTotal += totalPrice;
                 });
             });
-            // Respond with the map
             res.json({resultMap, cartTotal});
           })
         });
