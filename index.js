@@ -4,6 +4,7 @@ const port = process.env.PORT || 3000;
 const { Pool } = require('pg');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const MIN_PASSWORD_LENGTH = 10;
 
 app.use(express.json());
 app.use(cors());
@@ -24,7 +25,6 @@ connection.connect((err) => {
 
 });
 
-const MIN_PASSWORD_LENGTH = 10;
 
 app.get('/', async (req, res) => {
     try {
@@ -40,7 +40,7 @@ app.get('/', async (req, res) => {
 });
 
 
-
+//Sign In
 app.post('/sign-in/:role', async (req, res) => {
     const { email, user_password } = req.body;
     const user_role = req.params['role'];
@@ -63,7 +63,7 @@ app.post('/sign-in/:role', async (req, res) => {
 
 
   
-//Registering user
+// Register user
 app.post('/registerUser/:role', async (req, res) => {
     const {
         email,
@@ -144,6 +144,7 @@ app.post('/registerSeller', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 // Registering customer
 app.post('/registerCustomer', async (req, res) => {
