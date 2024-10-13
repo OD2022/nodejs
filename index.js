@@ -3,6 +3,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 const { Pool } = require('pg');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
 
 app.use(express.json());
 app.use(cors());
@@ -19,20 +20,22 @@ connection.connect((err) => {
         console.error('Error connecting to SQL: ' + err.stack);
         return;
     }
-    console.log('Connected to MySQL as id ' + connection.threadId);
+    console.log('Connected to PostGreSQL);
 
 });
 
+const MIN_PASSWORD_LENGTH = 10;
+
 app.get('/', async (req, res) => {
     try {
-      const client = await connection.connect();
-      const result = await client.query('SELECT * FROM Product LIMIT 10');
-      const products = result.rows;
-      client.release();
-      res.json(products);
+        const client = await connection.connect();
+        const result = await client.query('SELECT * FROM Product LIMIT 10');
+        const products = result.rows;
+        client.release();
+        res.json(products);
     } catch (error) {
-      console.error('Error executing query', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error executing query', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -57,72 +60,112 @@ app.post('/sign-in/:role', async (req, res) => {
     );
   });
 
+
   //Registering user
-  app.post('/registerUser/:role', (req, res) => {
-        const {
-            email,
-            first_name,
-            last_name,
-            country,
-            user_password
-        } = req.body;
-        const role = req.params['role'];
-        connection.query('INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES ($1,$2,$3,$4,$5,$6)', [email, first_name, last_name, country, user_password, role], (error, results) => {
-            if (error) {
-              throw error
-            }
-            res.status(201).send('User succesfuly added');
-          })
-        });
+app.post('/registerUser/:role', async (req, res) => {
+    const {
+        email,
+        first_name,
+        last_name,
+        country,
+        user_password
+    } = req.body;
+
+    const role = req.params['role'];
+
+    if (user_password.length < MIN_PASSWORD_LENGTH) {
+        return res.status(400).send(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long`);
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(user_password, 10);
+        await connection.query('INSERT INTO WovenUsers(email, first_name, last_name, country, user_password, user_role) VALUES ($1, $2, $3, $4, $5, $6)', 
+            [email, first_name, last_name, country, hashedPassword, role]);
+        res.status(201).send('User successfully added');
+    } catch (error) {
+        console.error('Error executing query', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 
-        app.post('/registerAdmin', (req, res) => {
-            const {
-                email,
-                admin_tel_no,
-                address,
-                DOB,
-                sex
-            } = req.body;
-            connection.query('INSERT INTO WovenAdmin(email, admin_tel_no, address, dob, sex) VALUES ($1,$2,$3,$4,$5)',[email, admin_tel_no, address, DOB, sex], (error, results) => {
-                if (error) {
-                  throw error
-                }
-                res.status(201).send('Admin succesfuly added');
-              })
-            });
+// Registering admin
+app.post('/registerAdmin', async (req, res) => {
+    const {
+        email,
+        admin_tel_no,
+        address,
+        DOB,
+        sex,
+        admin_password 
+    } = req.body;
 
-            app.post('/registerSeller', (req, res) => {
-                const {
-                    email,
-                    ghana_region,
-                    seller_tel_no,
-                    momo_number,
-                    address,
-                    dob,
-                    sex
-                } = req.body;
-                connection.query('INSERT INTO Seller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex) VALUES ($1,$2,$3,$4,$5,$6,$7)',[email, ghana_region, seller_tel_no, momo_number, address, dob, sex]
-                , (error, results) => {
-                    if (error) {
-                      throw error
-                    }
-                    res.status(201).send('Seller succesfuly added');
-                  })
-                });
+    if (admin_password.length < MIN_PASSWORD_LENGTH) {
+        return res.status(400).send(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long`);
+    }
 
-                app.post('/registerCustomer', (req, res) => {
-                    const {
-                        email
-                    } = req.body;
-                    connection.query('INSERT INTO Seller(email) VALUES ($1)',[email]
-                    , (error, results) => {
-                        if (error) {
-                          throw error
-                        }
-                        res.status(201).send('Customer succesfuly added');
-                      })
-                    });
+    try {
+        const hashedPassword = await bcrypt.hash(admin_password, 10);
+        await connection.query('INSERT INTO WovenAdmin(email, admin_tel_no, address, dob, sex, admin_password) VALUES ($1, $2, $3, $4, $5, $6)', 
+            [email, admin_tel_no, address, DOB, sex, hashedPassword]);
+        res.status(201).send('Admin successfully added');
+    } catch (error) {
+        console.error('Error executing query', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+// Registering seller
+app.post('/registerSeller', async (req, res) => {
+    const {
+        email,
+        ghana_region,
+        seller_tel_no,
+        momo_number,
+        address,
+        dob,
+        sex,
+        seller_password 
+    } = req.body;
+
+    if (seller_password.length < MIN_PASSWORD_LENGTH) {
+        return res.status(400).send(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long`);
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(seller_password, 10);
+        await connection.query('INSERT INTO Seller(email, ghana_region, seller_tel_no, momo_number, address, dob, sex, seller_password) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', 
+            [email, ghana_region, seller_tel_no, momo_number, address, dob, sex, hashedPassword]);
+        res.status(201).send('Seller successfully added');
+    } catch (error) {
+        console.error('Error executing query', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+// Registering customer
+app.post('/registerCustomer', async (req, res) => {
+    const {
+        email,
+        customer_password 
+    } = req.body;
+
+    if (customer_password.length < MIN_PASSWORD_LENGTH) {
+        return res.status(400).send(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long`);
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(customer_password, 10);
+        await connection.query('INSERT INTO Customer(email, customer_password) VALUES ($1, $2)', 
+            [email, hashedPassword]);
+        res.status(201).send('Customer successfully added');
+    } catch (error) {
+        console.error('Error executing query', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
 
 
 //Creating a cart
