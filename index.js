@@ -40,6 +40,7 @@ app.get('/', async (req, res) => {
 });
 
 
+
 app.post('/sign-in/:role', async (req, res) => {
     const { email, user_password } = req.body;
     const user_role = req.params['role'];
@@ -61,7 +62,8 @@ app.post('/sign-in/:role', async (req, res) => {
   });
 
 
-  //Registering user
+  
+//Registering user
 app.post('/registerUser/:role', async (req, res) => {
     const {
         email,
